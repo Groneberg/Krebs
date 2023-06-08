@@ -1,7 +1,7 @@
 import time
 
 
-def progress_bar(iterable, desc="", over_printable=False):
+def progress_bar(iterable, desc="", replace_line=False):
 	total = len(iterable)
 	start_time = time.time()
 	for i, item in enumerate(iterable, 1):
@@ -11,6 +11,11 @@ def progress_bar(iterable, desc="", over_printable=False):
 		remaining = int((1 - progress) * 50)
 		print(f"\r[{completed * '='}>{remaining * '.'}] {i}/{total} - {elapsed_time:.2f}s | {desc}", end="")
 		yield item
-	if not over_printable:
+	if not replace_line:
 		print()
 
+
+def end_replaceable_progress_bar(message=""):
+	if message:
+		print(f"\r{message}")  # Replace the progress bar with the message
+	print()  # Cancel out the last \r line of the progress bar
