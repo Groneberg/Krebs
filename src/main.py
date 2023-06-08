@@ -56,9 +56,19 @@ def prepare_labelbox_dataset_for_yolo() -> int:
 
 	# todo: validate annotations
 
+	# todo: scale video frames
+
 	# todo: split dataset into train, test, (validation)
 
 	# todo: augment dataset
+
+
+def train_yolo():
+	pass
+
+
+def predict_yolo():
+	pass
 
 
 if __name__ == '__main__':
