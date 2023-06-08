@@ -27,7 +27,7 @@ def keep_nth_frame(source_dir, discard_dir, keep_nth_frame=30):
 	last_kept_frame_index = None
 
 	files = sorted(os.listdir(source_dir), key=id_and_frame_index_sorting_key)
-	for file in progress_bar(files, 'Thinning out frames', replace_line=True):
+	for file in progress_bar(files, desc='Thinning out frames', replace_line=True):
 		# skip non-txt files
 		if not file.endswith('.txt'):
 			continue

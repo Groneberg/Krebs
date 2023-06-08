@@ -9,6 +9,7 @@ from src import video_frame_thinning
 
 
 def prepare_labelbox_dataset_for_yolo() -> int:
+	print('Preparing labelbox dataset for YOLO...')
 	dotenv_path = Path('../.env.local')
 	load_dotenv(dotenv_path=dotenv_path)
 
@@ -19,12 +20,12 @@ def prepare_labelbox_dataset_for_yolo() -> int:
 	# Download labelbox annotations
 	if not os.path.exists(config.DIR_CURRENT_DATASET):
 		os.makedirs(config.DIR_CURRENT_DATASET)
-	if not os.path.exists(config.LABELBOX_ANNOTATIONS_EXPORT_PATH):
-		labelbox_annotations.download_project_json(
-			os.getenv('LABELBOX_API_KEY'),
-			config.LABELBOX_PROJECT_ID,
-			config.LABELBOX_EXPORT_PARAMETERS
-		)
+
+	labelbox_annotations.download_project_json(
+		os.getenv('LABELBOX_API_KEY'),
+		config.LABELBOX_PROJECT_ID,
+		config.LABELBOX_EXPORT_PARAMETERS
+	)
 
 	# Convert labelbox annotations to YOLO format
 	if not os.path.exists(config.DIR_TRAINING):
