@@ -4,6 +4,7 @@ PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 DIR_DATA = os.path.join(PROJECT_PATH, 'data')
 DIR_CURRENT_DATASET = os.path.join(DIR_DATA, 'crawfish_dataset_v1')
+DIR_VIDEOS = os.path.join(DIR_CURRENT_DATASET, 'videos')
 
 # dataset
 DIR_TRAINING = os.path.join(DIR_CURRENT_DATASET, 'train')

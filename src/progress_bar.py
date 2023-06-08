@@ -1,8 +1,8 @@
 import time
 
 
-def progress_bar(iterable, desc="", replace_line=False):
-	total = len(iterable)
+def progress_bar(iterable, total_length=None, desc="", replace_line=False):
+	total = len(iterable) if total_length is None else total_length
 	start_time = time.time()
 	for i, item in enumerate(iterable, 1):
 		elapsed_time = time.time() - start_time
