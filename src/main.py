@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 from src import labelbox_annotations
-from src import labelbox_video_json_transformer
 from src import video_frame_thinning
 
 
@@ -21,12 +20,16 @@ def prepare_labelbox_dataset_for_yolo() -> int:
 		os.makedirs(config.DIR_CURRENT_DATASET)
 
 	if not os.path.exists(config.LABELBOX_ANNOTATIONS_EXPORT_PATH):
-		labelbox_annotations.download_json(os.getenv('LABELBOX_API_KEY'))
+		labelbox_annotations.download_project_json(
+			os.getenv('LABELBOX_API_KEY'),
+			config.LABELBOX_PROJECT_ID,
+			config.LABELBOX_EXPORT_PARAMETERS
+		)
 
 	if not os.path.exists(config.DIR_TRAINING):
 		os.makedirs(config.DIR_TRAINING)
 
-	labelbox_video_json_transformer.convert_to_yolo(
+	labelbox_annotations.convert_to_yolo(
 		input_json_path=config.LABELBOX_ANNOTATIONS_EXPORT_PATH,
 		output_directory=config.DIR_TRAINING
 	)
