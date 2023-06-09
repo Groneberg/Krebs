@@ -94,8 +94,8 @@ def download_project_videos(input_json_path: str, output_dir: str) -> None:
 	end_replaceable_progress_bar('Finished downloading videos')
 
 
-def remove_video_annotations_without_project_data(input_json_path: str) -> None:
-	print('Removing video annotations without project data...')
+def remove_invalid_videos_from_annotations(input_json_path: str) -> None:
+	print('Removing invalid video annotations...')
 	with open(input_json_path) as file:
 		data = json.load(file)
 
@@ -104,8 +104,7 @@ def remove_video_annotations_without_project_data(input_json_path: str) -> None:
 
 	updated_data = []
 	for item in data:
-		project_data = item['projects']
-		if config.LABELBOX_PROJECT_ID in project_data:
+		if _get_frame_annotations(item) is not None:
 			updated_data.append(item)
 			kept_video_count += 1
 
@@ -157,8 +156,10 @@ def _get_frame_annotations(item):
 	if config.LABELBOX_PROJECT_ID not in project_data:
 		return
 	current_project = project_data[config.LABELBOX_PROJECT_ID]
-	frame_annotations = current_project['labels'][0]['annotations']['frames']
-	return frame_annotations
+	labels = current_project['labels']
+	if not labels or len(labels) <= 0:
+		return
+	return labels[0]['annotations']['frames']
 
 
 def _set_frame_annotations(item, frame_annotations):

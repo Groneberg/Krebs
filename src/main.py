@@ -27,7 +27,7 @@ def prepare_labelbox_dataset_for_yolo() -> int:
 	)
 
 	# Remove video annotations without project data, sice the labelbox API returns all videos
-	labelbox_annotations.remove_video_annotations_without_project_data(
+	labelbox_annotations.remove_invalid_videos_from_annotations(
 		input_json_path=config.LABELBOX_ANNOTATIONS_EXPORT_PATH
 	)
 
