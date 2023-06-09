@@ -1,3 +1,4 @@
+import cv2
 import labelbox
 import requests
 
@@ -231,3 +232,19 @@ def _write_to_label_file(label_path, line):
 	with open(label_path, 'a') as file:
 		file.write(('%g ' * len(line)).rstrip() % line + '\n')
 
+
+def extract_and_resize_frames_from_videos():
+	if os.path.isdir(config.DIR_TRAINING):
+		for file in os.listdir(config.DIR_TRAINING):
+			if file.endswith('txt'):
+				video_frame = file[:-4]
+				video_id, frame = video_frame.split('-')
+				video_file = f'{video_id}.mp4'
+				if not os.path.exists(f'{config.DIR_VIDEOS}/{video_file}'):
+					print('Video was not found in Videos Folder')
+				else:
+					video = cv2.VideoCapture(f'{config.DIR_VIDEOS}/{video_file}')
+					video.set(cv2.CAP_PROP_POS_FRAMES, int(frame))
+					ret, frame = video.read()
+					image = cv2.resize(frame, (640, 360))
+					cv2.imwrite(f'{config.DIR_TRAINING}/{video_frame}.jpg', image)

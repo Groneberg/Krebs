@@ -53,7 +53,8 @@ def prepare_labelbox_dataset_for_yolo() -> int:
 		output_dir=config.DIR_VIDEOS
 	)
 
-	# todo: extract frames from videos
+	# extract and resize frames from videos
+	labelbox_annotations.extract_and_resize_frames_from_videos()
 
 	# Reduce the number of frames in the dataset by keeping only every nth frame
 	if not os.path.exists(config.DIR_DISCARD):
