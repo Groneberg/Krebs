@@ -11,7 +11,7 @@ from src.progress_bar import progress_bar, end_replaceable_progress_bar
 
 
 def download_project_json(labelbox_api_key: str, project_id: str, export_parameters: dict) -> None:
-	print('Exporting labelbox annotations...')
+	print('Downloading labelbox annotations json...')
 
 	client = labelbox.Client(api_key=labelbox_api_key)
 	project = client.get_project(project_id)
@@ -30,9 +30,9 @@ def download_project_json(labelbox_api_key: str, project_id: str, export_paramet
 		print(f'Exported labelbox annotations to {config.LABELBOX_ANNOTATIONS_EXPORT_PATH}')
 
 
-def download_project_videos(json_file_path: str, output_dir: str) -> None:
+def download_project_videos(input_json_path: str, output_dir: str) -> None:
 	print('Downloading videos...')
-	with open(json_file_path) as file:
+	with open(input_json_path) as file:
 		data = json.load(file)
 
 	for item in data:
@@ -94,6 +94,81 @@ def download_project_videos(json_file_path: str, output_dir: str) -> None:
 	end_replaceable_progress_bar('Finished downloading videos')
 
 
+def remove_video_annotations_without_project_data(input_json_path: str) -> None:
+	print('Removing video annotations without project data...')
+	with open(input_json_path) as file:
+		data = json.load(file)
+
+	original_video_count = len(data)
+	kept_video_count = 0
+
+	updated_data = []
+	for item in data:
+		project_data = item['projects']
+		if config.LABELBOX_PROJECT_ID in project_data:
+			updated_data.append(item)
+			kept_video_count += 1
+
+	with open(input_json_path, 'w') as file:
+		json.dump(updated_data, file)
+
+	print(f'Finished removing video annotations without project data, kept {kept_video_count} out of {original_video_count} videos')
+
+
+def thin_out_frame_annotations(input_json_path: str, keep_nth_frame: int):
+	print(f'Thinning out frame annotations, keeping every {keep_nth_frame}th frame...')
+	original_frame_count = 0
+	kept_frame_count = 0
+
+	with open(input_json_path) as file:
+		data = json.load(file)
+
+	for item in data:
+		frame_annotations = _get_frame_annotations(item)
+		if frame_annotations is None:
+			continue
+		original_frame_count += len(frame_annotations)
+
+		kept_frames = {}
+		last_kept_frame_index = None
+
+		for frame_index, frame_data in frame_annotations.items():
+			current_frame_index = int(frame_index)
+			keep = False
+
+			if last_kept_frame_index is None or current_frame_index - last_kept_frame_index >= keep_nth_frame:
+				last_kept_frame_index = current_frame_index
+				keep = True
+
+			if keep:
+				kept_frames[frame_index] = frame_data
+
+		kept_frame_count += len(kept_frames)
+		_set_frame_annotations(item, kept_frames)
+
+	with open(input_json_path, 'w') as file:
+		json.dump(data, file, indent=4)
+
+	print(f'Finished thinning out frame annotations, kept {kept_frame_count} out of {original_frame_count} frames')
+
+
+def _get_frame_annotations(item):
+	project_data = item['projects']
+	if config.LABELBOX_PROJECT_ID not in project_data:
+		return
+	current_project = project_data[config.LABELBOX_PROJECT_ID]
+	frame_annotations = current_project['labels'][0]['annotations']['frames']
+	return frame_annotations
+
+
+def _set_frame_annotations(item, frame_annotations):
+	project_data = item['projects']
+	if config.LABELBOX_PROJECT_ID not in project_data:
+		return
+	current_project = project_data[config.LABELBOX_PROJECT_ID]
+	current_project['labels'][0]['annotations']['frames'] = frame_annotations
+
+
 def convert_to_yolo(input_json_path: str, output_directory: str):
 	print('Converting labels to YOLO format...')
 	converted_videos = []
@@ -111,18 +186,16 @@ def convert_to_yolo(input_json_path: str, output_directory: str):
 		media_height = item['media_attributes']['height']
 		media_width = item['media_attributes']['width']
 
-		project_data = item['projects']
-		if config.LABELBOX_PROJECT_ID not in project_data:
+		frame_annotations = _get_frame_annotations(item)
+		if frame_annotations is None:
 			skipped_videos.append(video_id)
 			continue
 		converted_videos.append(video_id)
 
-		crayfish_project = project_data[config.LABELBOX_PROJECT_ID]
-		frame_annotations = crayfish_project['labels'][0]['annotations']['frames']
 		# Iterate over the frames inside the video folder
 		for frame_index, frame_data in progress_bar(frame_annotations.items(), desc=f'Converting frames in {video_id}', replace_line=True):
 			for object_id, object_data in frame_data['objects'].items():
-				normalized_coords = yolo_normalize_bounding_box(media_height, media_width, object_data)
+				normalized_coords = _yolo_normalize_bounding_box(media_height, media_width, object_data)
 
 				# Get the detected object class name
 				cls = object_data['name']
@@ -135,12 +208,12 @@ def convert_to_yolo(input_json_path: str, output_directory: str):
 				true_frame_index = int(frame_index) - 1  # Convert the frame index to 0-based indexing
 				label_path = output_directory / f'{video_id}-{true_frame_index}.txt'
 
-				write_to_label_file(label_path, line)
+				_write_to_label_file(label_path, line)
 
 	end_replaceable_progress_bar(f'Converted videos: {len(converted_videos)} | Skipped due to missing annotations: {len(skipped_videos)}')
 
 
-def yolo_normalize_bounding_box(media_height, media_width, object_data):
+def _yolo_normalize_bounding_box(media_height, media_width, object_data):
 	bounding_box = object_data['bounding_box']
 	top, left, width, height = bounding_box['top'], bounding_box['left'], bounding_box['width'], bounding_box['height']
 
@@ -153,7 +226,7 @@ def yolo_normalize_bounding_box(media_height, media_width, object_data):
 	return normalized_coords
 
 
-def write_to_label_file(label_path, line):
+def _write_to_label_file(label_path, line):
 	with open(label_path, 'a') as file:
 		file.write(('%g ' * len(line)).rstrip() % line + '\n')
 

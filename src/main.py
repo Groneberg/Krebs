@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 from src import labelbox_annotations
-from src import video_frame_thinning
 
 
 def prepare_labelbox_dataset_for_yolo() -> int:
@@ -27,6 +26,17 @@ def prepare_labelbox_dataset_for_yolo() -> int:
 		config.LABELBOX_EXPORT_PARAMETERS
 	)
 
+	# Remove video annotations without project data, sice the labelbox API returns all videos
+	labelbox_annotations.remove_video_annotations_without_project_data(
+		input_json_path=config.LABELBOX_ANNOTATIONS_EXPORT_PATH
+	)
+
+	# Thin out the number of frames in the project json. Reducing it here will reduce the work for all subsequent steps.
+	labelbox_annotations.thin_out_frame_annotations(
+		input_json_path=config.LABELBOX_ANNOTATIONS_EXPORT_PATH,
+		keep_nth_frame=config.THINNING_KEEP_NTH_FRAME
+	)
+
 	# Convert labelbox annotations to YOLO format
 	if not os.path.exists(config.DIR_TRAINING):
 		os.makedirs(config.DIR_TRAINING)
@@ -39,7 +49,7 @@ def prepare_labelbox_dataset_for_yolo() -> int:
 	if not os.path.exists(config.DIR_VIDEOS):
 		os.makedirs(config.DIR_VIDEOS)
 	labelbox_annotations.download_project_videos(
-		json_file_path=config.LABELBOX_ANNOTATIONS_EXPORT_PATH,
+		input_json_path=config.LABELBOX_ANNOTATIONS_EXPORT_PATH,
 		output_dir=config.DIR_VIDEOS
 	)
 
@@ -48,11 +58,13 @@ def prepare_labelbox_dataset_for_yolo() -> int:
 	# Reduce the number of frames in the dataset by keeping only every nth frame
 	if not os.path.exists(config.DIR_DISCARD):
 		os.makedirs(config.DIR_DISCARD)
-	video_frame_thinning.keep_nth_frame(
-		source_dir=config.DIR_TRAINING,
-		discard_dir=config.DIR_DISCARD,
-		keep_nth_frame=config.THINNING_KEEP_NTH_FRAME
-	)
+
+	# Redundant, since we're already thinning out the frames in the labelbox annotations
+	# video_frame_thinning.keep_nth_frame(
+	# 	source_dir=config.DIR_TRAINING,
+	# 	discard_dir=config.DIR_DISCARD,
+	# 	keep_nth_frame=config.THINNING_KEEP_NTH_FRAME
+	# )
 
 	# todo: validate annotations
 
