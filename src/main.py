@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 from src import labelbox_annotations
+from split_dataset import split_dataset
 
 
 def prepare_labelbox_dataset_for_yolo() -> int:
@@ -72,6 +73,7 @@ def prepare_labelbox_dataset_for_yolo() -> int:
 	# todo: scale video frames
 
 	# todo: split dataset into train, test, (validation)
+	split_dataset(config.DIR_VIDEOS)
 
 	# todo: augment dataset
 
