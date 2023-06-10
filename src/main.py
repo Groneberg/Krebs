@@ -4,7 +4,7 @@ import config
 from dotenv import load_dotenv
 from pathlib import Path
 
-from src import labelbox_annotations
+from src import labelbox_annotations, video_processing
 from split_dataset import split_dataset
 
 
@@ -49,13 +49,13 @@ def prepare_labelbox_dataset_for_yolo() -> int:
 	# Download videos
 	if not os.path.exists(config.DIR_VIDEOS):
 		os.makedirs(config.DIR_VIDEOS)
-	labelbox_annotations.download_project_videos(
+	video_processing.download_project_videos(
 		input_json_path=config.LABELBOX_ANNOTATIONS_EXPORT_PATH,
 		output_dir=config.DIR_VIDEOS
 	)
 
 	# extract and resize frames from videos
-	labelbox_annotations.extract_and_resize_frames_from_videos()
+	video_processing.extract_and_resize_frames_from_videos()
 
 	# Reduce the number of frames in the dataset by keeping only every nth frame
 	if not os.path.exists(config.DIR_DISCARD):
@@ -70,9 +70,7 @@ def prepare_labelbox_dataset_for_yolo() -> int:
 
 	# todo: validate annotations
 
-	# todo: scale video frames
-
-	# todo: split dataset into train, test, (validation)
+	# split dataset into train, test, (validation)
 	split_dataset(config.DIR_VIDEOS)
 
 	# todo: augment dataset
