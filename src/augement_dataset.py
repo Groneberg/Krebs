@@ -64,5 +64,3 @@ def augment_image(image, bboxes):
 def convert_tuple_to_writable_string(tuple_list):
     return '\n'.join(['0 ' + ' '.join(map(str, tpl)).rstrip(' 0.0') for tpl in tuple_list])
 
-
-run_augmentations()
