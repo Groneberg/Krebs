@@ -9,12 +9,16 @@ DIR_VIDEOS = os.path.join(DIR_CURRENT_DATASET, 'videos')
 # dataset
 DIR_TRAINING = os.path.join(DIR_CURRENT_DATASET, 'train')
 DIR_VALIDATION = os.path.join(DIR_CURRENT_DATASET, 'validate')
+DIR_AUGMENTED = os.path.join(DIR_CURRENT_DATASET, 'validate')
 DIR_TEST = os.path.join(DIR_CURRENT_DATASET, 'test')
 DIR_DISCARD = os.path.join(DIR_CURRENT_DATASET, 'discard')
 
 # dataset reduction
 THINNING_KEEP_NTH_FRAME = 30
 
+# enable augmentation
+# Set to enable, when bboxes error is solved
+AUGMENTATION_ENABLED = False
 
 # labelbox
 LABELBOX_PROJECT_ID = 'cliae24in02sz07yi2f7ves6h'

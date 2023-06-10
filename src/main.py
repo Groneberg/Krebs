@@ -1,4 +1,6 @@
 import os
+import shutil
+
 import config
 
 from dotenv import load_dotenv
@@ -6,6 +8,7 @@ from pathlib import Path
 
 from src import labelbox_annotations, video_processing
 from split_dataset import split_dataset
+from augement_dataset import run_augmentations
 
 
 def prepare_labelbox_dataset_for_yolo() -> int:
@@ -73,16 +76,24 @@ def prepare_labelbox_dataset_for_yolo() -> int:
 	# split dataset into train, test, (validation)
 	split_dataset(config.DIR_VIDEOS)
 
-	# todo: augment dataset
+	# augment current yolo dataset to increase the number of training images
+	if not os.path.exists(config.DIR_AUGMENTED):
+		os.makedirs(config.DIR_AUGMENTED)
+
+	if config.AUGMENTATION_ENABLED:
+		run_augmentations(config.DIR_TRAINING, config.DIR_AUGMENTED)
+		shutil.copytree(config.DIR_AUGMENTED, config.DIR_TRAINING)
+		# TODO: remove augmented images from training set when done / not needed currently
+		# TODO: add progress bar for augmentation
 
 
 def train_yolo():
-	pass
+    pass
 
 
 def predict_yolo():
-	pass
+    pass
 
 
 if __name__ == '__main__':
-	prepare_labelbox_dataset_for_yolo()
+    prepare_labelbox_dataset_for_yolo()
